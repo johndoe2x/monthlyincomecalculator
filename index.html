@@ -29,6 +29,7 @@
         th {
             background-color: #4CAF50;
             color: white;
+            cursor: grab;
         }
         input {
             width: 100px;
@@ -58,6 +59,9 @@
             font-weight: bold;
             background-color: #ffeb3b;
         }
+        tbody {
+            cursor: grab;
+        }
     </style>
     <script>
         function calculateIncome() {
@@ -84,34 +88,40 @@
         }
         
         function addRow() {
-            let table = document.getElementById("incomeTable");
-            let row = table.insertRow(table.rows.length - 1);
+            let table = document.getElementById("incomeTable").getElementsByTagName('tbody')[0];
+            let row = document.createElement("tr");
+            row.draggable = true;
             row.innerHTML = `
                 <td><input type="text" placeholder="Source" oninput="calculateIncome()"></td>
                 <td><input type="number" placeholder="Amount" oninput="calculateIncome()"></td>
                 <td><input type="number" placeholder="Rate" oninput="calculateIncome()"></td>
                 <td>0.00</td>
                 <td>0.00</td>
-                <td>
-                    <button onclick="moveUp(this)">⬆️</button>
-                    <button onclick="moveDown(this)">⬇️</button>
-                </td>
             `;
+            table.insertBefore(row, table.lastElementChild);
+            addDragAndDrop();
         }
-        
-        function moveUp(button) {
-            let row = button.parentNode.parentNode;
-            if (row.previousElementSibling && row.previousElementSibling.tagName === "TR") {
-                row.parentNode.insertBefore(row, row.previousElementSibling);
-            }
+
+        function addDragAndDrop() {
+            let rows = document.querySelectorAll("#incomeTable tbody tr");
+            rows.forEach(row => {
+                row.addEventListener("dragstart", function (e) {
+                    e.dataTransfer.setData("text/plain", row.rowIndex);
+                });
+                row.addEventListener("dragover", function (e) {
+                    e.preventDefault();
+                });
+                row.addEventListener("drop", function (e) {
+                    e.preventDefault();
+                    let draggedRowIndex = e.dataTransfer.getData("text/plain");
+                    let targetRow = e.target.closest("tr");
+                    let tbody = document.querySelector("#incomeTable tbody");
+                    tbody.insertBefore(tbody.rows[draggedRowIndex - 1], targetRow);
+                });
+            });
         }
-        
-        function moveDown(button) {
-            let row = button.parentNode.parentNode;
-            if (row.nextElementSibling && row.nextElementSibling.className !== "total") {
-                row.parentNode.insertBefore(row.nextElementSibling, row);
-            }
-        }
+
+        document.addEventListener("DOMContentLoaded", addDragAndDrop);
     </script>
 </head>
 <body>
@@ -121,20 +131,24 @@
     <label for="loadFile">Load File</label>
     <input type="file" id="loadFile" class="hidden-input" onchange="loadData(event)">
     <table id="incomeTable">
-        <tr>
-            <th>Income Source</th>
-            <th>Fund Amount (₹)</th>
-            <th>Interest Rate (%)</th>
-            <th>Monthly Income (₹)</th>
-            <th>Yearly Income (₹)</th>
-            <th>Actions</th>
-        </tr>
-        <tr class="total">
-            <td colspan="3">Total Income</td>
-            <td id="totalMonthlyIncome">0.00</td>
-            <td id="totalYearlyIncome">0.00</td>
-            <td></td>
-        </tr>
+        <thead>
+            <tr>
+                <th>Income Source</th>
+                <th>Fund Amount (₹)</th>
+                <th>Interest Rate (%)</th>
+                <th>Monthly Income (₹)</th>
+                <th>Yearly Income (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+            <tr class="total">
+                <td colspan="3">Total Income</td>
+                <td id="totalMonthlyIncome">0.00</td>
+                <td id="totalYearlyIncome">0.00</td>
+            </tr>
+        </tfoot>
     </table>
 </body>
 </html>
