@@ -29,7 +29,6 @@
         th {
             background-color: #4CAF50;
             color: white;
-            cursor: grab;
         }
         input {
             width: 100px;
@@ -59,7 +58,7 @@
             font-weight: bold;
             background-color: #ffeb3b;
         }
-        tbody {
+        tbody tr {
             cursor: grab;
         }
     </style>
@@ -102,20 +101,20 @@
         }
 
         function addDragAndDrop() {
+            let tbody = document.querySelector("#incomeTable tbody");
             let rows = document.querySelectorAll("#incomeTable tbody tr");
             rows.forEach(row => {
                 row.addEventListener("dragstart", function (e) {
-                    e.dataTransfer.setData("text/plain", row.rowIndex);
+                    e.dataTransfer.setData("text/plain", Array.from(tbody.children).indexOf(row));
                 });
                 row.addEventListener("dragover", function (e) {
                     e.preventDefault();
                 });
                 row.addEventListener("drop", function (e) {
                     e.preventDefault();
-                    let draggedRowIndex = e.dataTransfer.getData("text/plain");
-                    let tbody = document.querySelector("#incomeTable tbody");
-                    let draggedRow = tbody.rows[draggedRowIndex - 1];
-                    tbody.insertBefore(draggedRow, row);
+                    let draggedIndex = e.dataTransfer.getData("text/plain");
+                    let draggedRow = tbody.children[draggedIndex];
+                    tbody.insertBefore(draggedRow, row.nextSibling);
                 });
             });
         }
@@ -150,6 +149,7 @@
                 tbody.innerHTML = "";
                 data.forEach(item => {
                     let row = document.createElement("tr");
+                    row.draggable = true;
                     row.innerHTML = `
                         <td><input type="text" value="${item.source}" oninput="calculateIncome()"></td>
                         <td><input type="number" value="${item.amount}" oninput="calculateIncome()"></td>
