@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monthly and Yearly Income Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 20px;
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 15px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        input {
+            width: 100px;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .total {
+            font-weight: bold;
+            background-color: #ffeb3b;
+        }
+    </style>
+    <script>
+        function calculateIncome() {
+            let table = document.getElementById("incomeTable");
+            let rows = table.getElementsByTagName("tr");
+            let totalMonthlyIncome = 0;
+            let totalYearlyIncome = 0;
+            
+            for (let i = 1; i < rows.length - 1; i++) { 
+                let cells = rows[i].getElementsByTagName("td");
+                let fundAmount = parseFloat(cells[1].getElementsByTagName("input")[0].value) || 0;
+                let interestRate = parseFloat(cells[2].getElementsByTagName("input")[0].value) || 0;
+                let monthlyIncome = (fundAmount * interestRate) / 1200;
+                let yearlyIncome = monthlyIncome * 12;
+                
+                cells[3].innerText = monthlyIncome.toFixed(2);
+                cells[4].innerText = yearlyIncome.toFixed(2);
+                totalMonthlyIncome += monthlyIncome;
+                totalYearlyIncome += yearlyIncome;
+            }
+            
+            document.getElementById("totalMonthlyIncome").innerText = totalMonthlyIncome.toFixed(2);
+            document.getElementById("totalYearlyIncome").innerText = totalYearlyIncome.toFixed(2);
+        }
+        
+        function addRow() {
+            let table = document.getElementById("incomeTable");
+            let row = table.insertRow(table.rows.length - 1);
+            row.innerHTML = `
+                <td><input type="text" placeholder="Source"></td>
+                <td><input type="number" placeholder="Amount" oninput="calculateIncome()"></td>
+                <td><input type="number" placeholder="Rate" oninput="calculateIncome()"></td>
+                <td>0.00</td>
+                <td>0.00</td>
+            `;
+        }
+    </script>
+</head>
+<body>
+    <h2>Monthly and Yearly Income Calculator</h2>
+    <button onclick="addRow()">Add Income Source</button>
+    <table id="incomeTable">
+        <tr>
+            <th>Income Source</th>
+            <th>Fund Amount (₹)</th>
+            <th>Interest Rate (%)</th>
+            <th>Monthly Income (₹)</th>
+            <th>Yearly Income (₹)</th>
+        </tr>
+        <tr>
+            <td><input type="text" placeholder="Source"></td>
+            <td><input type="number" placeholder="Amount" oninput="calculateIncome()"></td>
+            <td><input type="number" placeholder="Rate" oninput="calculateIncome()"></td>
+            <td>0.00</td>
+            <td>0.00</td>
+        </tr>
+        <tr class="total">
+            <td colspan="3">Total Income</td>
+            <td id="totalMonthlyIncome">0.00</td>
+            <td id="totalYearlyIncome">0.00</td>
+        </tr>
+    </table>
+</body>
+</html>
