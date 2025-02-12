@@ -45,7 +45,7 @@
             font-size: 16px;
             cursor: pointer;
             border-radius: 5px;
-            margin-bottom: 20px;
+            margin: 5px;
         }
         button:hover {
             background-color: #45a049;
@@ -83,18 +83,71 @@
             let table = document.getElementById("incomeTable");
             let row = table.insertRow(table.rows.length - 1);
             row.innerHTML = `
-                <td><input type="text" placeholder="Source"></td>
+                <td><input type="text" placeholder="Source" oninput="calculateIncome()"></td>
                 <td><input type="number" placeholder="Amount" oninput="calculateIncome()"></td>
                 <td><input type="number" placeholder="Rate" oninput="calculateIncome()"></td>
                 <td>0.00</td>
                 <td>0.00</td>
             `;
         }
+        
+        function saveData() {
+            let tableData = [];
+            let rows = document.querySelectorAll("#incomeTable tr");
+            rows.forEach((row, index) => {
+                if (index > 0 && index < rows.length - 1) {
+                    let inputs = row.querySelectorAll("input");
+                    tableData.push({
+                        source: inputs[0].value,
+                        amount: inputs[1].value,
+                        rate: inputs[2].value
+                    });
+                }
+            });
+            let blob = new Blob([JSON.stringify(tableData)], { type: "application/json" });
+            let a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "income_data.json";
+            a.click();
+        }
+        
+        function loadData(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let data = JSON.parse(e.target.result);
+                let table = document.getElementById("incomeTable");
+                table.innerHTML = `
+                    <tr>
+                        <th>Income Source</th>
+                        <th>Fund Amount (₹)</th>
+                        <th>Interest Rate (%)</th>
+                        <th>Monthly Income (₹)</th>
+                        <th>Yearly Income (₹)</th>
+                    </tr>
+                `;
+                data.forEach(item => {
+                    let row = table.insertRow();
+                    row.innerHTML = `
+                        <td><input type="text" value="${item.source}" oninput="calculateIncome()"></td>
+                        <td><input type="number" value="${item.amount}" oninput="calculateIncome()"></td>
+                        <td><input type="number" value="${item.rate}" oninput="calculateIncome()"></td>
+                        <td>0.00</td>
+                        <td>0.00</td>
+                    `;
+                });
+                calculateIncome();
+            };
+            reader.readAsText(file);
+        }
     </script>
 </head>
 <body>
     <h2>Monthly and Yearly Income Calculator</h2>
     <button onclick="addRow()">Add Income Source</button>
+    <button onclick="saveData()">Save Data</button>
+    <input type="file" id="loadFile" onchange="loadData(event)">
     <table id="incomeTable">
         <tr>
             <th>Income Source</th>
@@ -102,13 +155,6 @@
             <th>Interest Rate (%)</th>
             <th>Monthly Income (₹)</th>
             <th>Yearly Income (₹)</th>
-        </tr>
-        <tr>
-            <td><input type="text" placeholder="Source"></td>
-            <td><input type="number" placeholder="Amount" oninput="calculateIncome()"></td>
-            <td><input type="number" placeholder="Rate" oninput="calculateIncome()"></td>
-            <td>0.00</td>
-            <td>0.00</td>
         </tr>
         <tr class="total">
             <td colspan="3">Total Income</td>
