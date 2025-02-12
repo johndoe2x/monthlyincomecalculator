@@ -67,6 +67,7 @@
             let rows = document.querySelectorAll("#incomeTable tbody tr");
             let totalMonthlyIncome = 0;
             let totalYearlyIncome = 0;
+            let totalFundAmount = 0;
             
             rows.forEach(row => {
                 let inputs = row.querySelectorAll("input");
@@ -79,10 +80,12 @@
                 row.cells[4].innerText = yearlyIncome.toFixed(2);
                 totalMonthlyIncome += monthlyIncome;
                 totalYearlyIncome += yearlyIncome;
+                totalFundAmount += fundAmount;
             });
             
             document.getElementById("totalMonthlyIncome").innerText = totalMonthlyIncome.toFixed(2);
             document.getElementById("totalYearlyIncome").innerText = totalYearlyIncome.toFixed(2);
+            document.getElementById("totalFundAmount").innerText = totalFundAmount.toFixed(2);
         }
         
         function addRow() {
@@ -105,25 +108,6 @@
             `;
             tbody.appendChild(row);
             addDragAndDrop();
-        }
-
-        function addDragAndDrop() {
-            let tbody = document.querySelector("#incomeTable tbody");
-            let rows = document.querySelectorAll("#incomeTable tbody tr");
-            rows.forEach(row => {
-                row.addEventListener("dragstart", function (e) {
-                    e.dataTransfer.setData("text/plain", Array.from(tbody.children).indexOf(row));
-                });
-                row.addEventListener("dragover", function (e) {
-                    e.preventDefault();
-                });
-                row.addEventListener("drop", function (e) {
-                    e.preventDefault();
-                    let draggedIndex = e.dataTransfer.getData("text/plain");
-                    let draggedRow = tbody.children[draggedIndex];
-                    tbody.insertBefore(draggedRow, row.nextSibling);
-                });
-            });
         }
 
         function saveData() {
@@ -192,7 +176,9 @@
         </tbody>
         <tfoot>
             <tr class="total">
-                <td colspan="3">Total Income</td>
+                <td>Total Fund</td>
+                <td id="totalFundAmount">0.00</td>
+                <td colspan="1">Total Income</td>
                 <td id="totalMonthlyIncome">0.00</td>
                 <td id="totalYearlyIncome">0.00</td>
             </tr>
