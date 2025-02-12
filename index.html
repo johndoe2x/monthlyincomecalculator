@@ -37,7 +37,7 @@
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-        button {
+        button, label {
             background-color: #4CAF50;
             color: white;
             border: none;
@@ -46,9 +46,13 @@
             cursor: pointer;
             border-radius: 5px;
             margin: 5px;
+            display: inline-block;
         }
-        button:hover {
+        button:hover, label:hover {
             background-color: #45a049;
+        }
+        .hidden-input {
+            display: none;
         }
         .total {
             font-weight: bold;
@@ -147,7 +151,8 @@
     <h2>Monthly and Yearly Income Calculator</h2>
     <button onclick="addRow()">Add Income Source</button>
     <button onclick="saveData()">Save Data</button>
-    <input type="file" id="loadFile" onchange="loadData(event)">
+    <label for="loadFile">Load File</label>
+    <input type="file" id="loadFile" class="hidden-input" onchange="loadData(event)">
     <table id="incomeTable">
         <tr>
             <th>Income Source</th>
