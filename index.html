@@ -101,13 +101,10 @@
             rows.forEach((row, index) => {
                 if (index > 0 && index < rows.length - 1) {
                     let inputs = row.querySelectorAll("input");
-                    let cells = row.querySelectorAll("td");
                     tableData.push({
                         source: inputs[0].value,
                         amount: inputs[1].value,
-                        rate: inputs[2].value,
-                        monthlyIncome: cells[3].innerText,
-                        yearlyIncome: cells[4].innerText
+                        rate: inputs[2].value
                     });
                 }
             });
@@ -140,8 +137,8 @@
                         <td><input type="text" value="${item.source}" oninput="calculateIncome()"></td>
                         <td><input type="number" value="${item.amount}" oninput="calculateIncome()"></td>
                         <td><input type="number" value="${item.rate}" oninput="calculateIncome()"></td>
-                        <td>${item.monthlyIncome}</td>
-                        <td>${item.yearlyIncome}</td>
+                        <td>0.00</td>
+                        <td>0.00</td>
                     `;
                 });
                 calculateIncome();
