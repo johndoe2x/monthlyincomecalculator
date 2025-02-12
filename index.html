@@ -128,7 +128,9 @@
                 data.push({
                     source: inputs[0].value,
                     amount: inputs[1].value,
-                    rate: inputs[2].value
+                    rate: inputs[2].value,
+                    monthlyIncome: row.cells[3].innerText,
+                    yearlyIncome: row.cells[4].innerText
                 });
             });
             let blob = new Blob([JSON.stringify(data)], { type: "application/json" });
@@ -152,8 +154,8 @@
                         <td><input type="text" value="${item.source}" oninput="calculateIncome()"></td>
                         <td><input type="number" value="${item.amount}" oninput="calculateIncome()"></td>
                         <td><input type="number" value="${item.rate}" oninput="calculateIncome()"></td>
-                        <td>0.00</td>
-                        <td>0.00</td>
+                        <td>${item.monthlyIncome}</td>
+                        <td>${item.yearlyIncome}</td>
                     `;
                     tbody.appendChild(row);
                 });
