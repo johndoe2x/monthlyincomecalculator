@@ -92,58 +92,25 @@
                 <td><input type="number" placeholder="Rate" oninput="calculateIncome()"></td>
                 <td>0.00</td>
                 <td>0.00</td>
+                <td>
+                    <button onclick="moveUp(this)">⬆️</button>
+                    <button onclick="moveDown(this)">⬇️</button>
+                </td>
             `;
         }
         
-        function saveData() {
-            let tableData = [];
-            let rows = document.querySelectorAll("#incomeTable tr");
-            rows.forEach((row, index) => {
-                if (index > 0 && index < rows.length - 1) {
-                    let inputs = row.querySelectorAll("input");
-                    tableData.push({
-                        source: inputs[0].value,
-                        amount: inputs[1].value,
-                        rate: inputs[2].value
-                    });
-                }
-            });
-            let blob = new Blob([JSON.stringify(tableData)], { type: "application/json" });
-            let a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = "income_data.json";
-            a.click();
+        function moveUp(button) {
+            let row = button.parentNode.parentNode;
+            if (row.previousElementSibling && row.previousElementSibling.tagName === "TR") {
+                row.parentNode.insertBefore(row, row.previousElementSibling);
+            }
         }
         
-        function loadData(event) {
-            let file = event.target.files[0];
-            if (!file) return;
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                let data = JSON.parse(e.target.result);
-                let table = document.getElementById("incomeTable");
-                table.innerHTML = `
-                    <tr>
-                        <th>Income Source</th>
-                        <th>Fund Amount (₹)</th>
-                        <th>Interest Rate (%)</th>
-                        <th>Monthly Income (₹)</th>
-                        <th>Yearly Income (₹)</th>
-                    </tr>
-                `;
-                data.forEach(item => {
-                    let row = table.insertRow();
-                    row.innerHTML = `
-                        <td><input type="text" value="${item.source}" oninput="calculateIncome()"></td>
-                        <td><input type="number" value="${item.amount}" oninput="calculateIncome()"></td>
-                        <td><input type="number" value="${item.rate}" oninput="calculateIncome()"></td>
-                        <td>0.00</td>
-                        <td>0.00</td>
-                    `;
-                });
-                calculateIncome();
-            };
-            reader.readAsText(file);
+        function moveDown(button) {
+            let row = button.parentNode.parentNode;
+            if (row.nextElementSibling && row.nextElementSibling.className !== "total") {
+                row.parentNode.insertBefore(row.nextElementSibling, row);
+            }
         }
     </script>
 </head>
@@ -160,11 +127,13 @@
             <th>Interest Rate (%)</th>
             <th>Monthly Income (₹)</th>
             <th>Yearly Income (₹)</th>
+            <th>Actions</th>
         </tr>
         <tr class="total">
             <td colspan="3">Total Income</td>
             <td id="totalMonthlyIncome">0.00</td>
             <td id="totalYearlyIncome">0.00</td>
+            <td></td>
         </tr>
     </table>
 </body>
