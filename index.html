@@ -87,7 +87,13 @@
             document.getElementById("totalYearlyIncome").innerText = totalYearlyIncome.toFixed(2);
             document.getElementById("totalFundAmount").innerText = totalFundAmount.toFixed(2);
         }
-        
+
+        function deleteRow(button) {
+            const row = button.closest('tr');
+            row.remove();
+            calculateIncome();
+        }
+
         function addRow() {
             let tbody = document.querySelector("#incomeTable tbody");
             let row = document.createElement("tr");
@@ -105,6 +111,7 @@
                 <td><input type="number" placeholder="Rate" oninput="calculateIncome()"></td>
                 <td>0.00</td>
                 <td>0.00</td>
+                <td><button onclick="deleteRow(this)">Delete</button></td>
             `;
             tbody.appendChild(row);
             addDragAndDrop();
@@ -146,6 +153,7 @@
                         <td><input type="number" value="${item.rate}" oninput="calculateIncome()"></td>
                         <td>${item.monthlyIncome}</td>
                         <td>${item.yearlyIncome}</td>
+                        <td><button onclick="deleteRow(this)">Delete</button></td>
                     `;
                     tbody.appendChild(row);
                 });
@@ -153,6 +161,31 @@
                 addDragAndDrop();
             };
             reader.readAsText(file);
+        }
+
+        function addDragAndDrop() {
+            const tbody = document.querySelector("#incomeTable tbody");
+            let draggedRow;
+
+            tbody.querySelectorAll("tr").forEach(row => {
+                row.addEventListener("dragstart", function (e) {
+                    draggedRow = this;
+                    e.dataTransfer.effectAllowed = "move";
+                });
+
+                row.addEventListener("dragover", function (e) {
+                    e.preventDefault();
+                });
+
+                row.addEventListener("drop", function () {
+                    if (draggedRow !== this) {
+                        const temp = this.innerHTML;
+                        this.innerHTML = draggedRow.innerHTML;
+                        draggedRow.innerHTML = temp;
+                        calculateIncome(); // re-calculate after swapping rows
+                    }
+                });
+            });
         }
     </script>
 </head>
@@ -170,6 +203,7 @@
                 <th>Interest Rate (%)</th>
                 <th>Monthly Income (₹)</th>
                 <th>Yearly Income (₹)</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -181,6 +215,7 @@
                 <td colspan="1">Total Income</td>
                 <td id="totalMonthlyIncome">0.00</td>
                 <td id="totalYearlyIncome">0.00</td>
+                <td></td>
             </tr>
         </tfoot>
     </table>
