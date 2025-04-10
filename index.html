@@ -1,28 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Monthly and Yearly Income Calculator</title>
+    <title>Income Calculator with Themes</title>
     <style>
+        :root {
+            --bg: #f4f4f4;
+            --text: #333;
+            --card: #ffffff;
+            --highlight: #ffeb3b;
+        }
+        body.dark {
+            --bg: #121212;
+            --text: #e0e0e0;
+            --card: #1e1e1e;
+            --highlight: #444444;
+        }
+        body.solarized {
+            --bg: #fdf6e3;
+            --text: #657b83;
+            --card: #eee8d5;
+            --highlight: #b58900;
+        }
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 20px;
             text-align: center;
-        }
-        h2 {
-            color: #333;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         table {
-            width: 80%;
+            width: 90%;
             margin: 20px auto;
             border-collapse: collapse;
-            background: white;
+            background-color: var(--card);
+            transition: background-color 0.3s ease;
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
             border-radius: 10px;
             overflow: hidden;
         }
         th, td {
-            padding: 15px;
+            padding: 10px;
             border: 1px solid #ddd;
             text-align: center;
         }
@@ -31,7 +49,7 @@
             color: white;
         }
         select, input {
-            width: 120px;
+            width: 100px;
             padding: 5px;
             text-align: center;
             border: 1px solid #ccc;
@@ -45,8 +63,7 @@
             font-size: 16px;
             cursor: pointer;
             border-radius: 5px;
-            margin: 5px;
-            display: inline-block;
+            margin: 5px 5px 5px 0;
         }
         button:hover, label:hover {
             background-color: #45a049;
@@ -56,51 +73,95 @@
         }
         .total {
             font-weight: bold;
-            background-color: #ffeb3b;
+            background-color: var(--highlight);
+            color: var(--text);
         }
-        tbody tr {
-            cursor: grab;
+        .error {
+            border-color: red;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .chart-container {
+            width: 45%;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+        .enhanced-select {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            min-width: 200px;
+        }
+        .enhanced-select option {
+            color: black;
         }
     </style>
+</head>
+<body>
+    <h2>Monthly and Yearly Income Calculator</h2>
+    <div class="top-bar">
+        <button onclick="addRow()">Add Income Source</button>
+        <button onclick="saveData()">Save Data</button>
+        <label for="loadFile">Load File</label>
+        <input type="file" id="loadFile" class="hidden-input" onchange="loadData(event)">
+        <select id="themeSelect" class="button enhanced-select" onchange="changeTheme(this.value)">
+            <option value="default">Theme: Default</option>
+            <option value="dark">Theme: Dark</option>
+            <option value="solarized">Theme: Solarized</option>
+        </select>
+        <select id="chartType" class="button enhanced-select" onchange="calculateIncome()">
+            <option value="pie">Chart: Pie</option>
+            <option value="bar">Chart: Bar</option>
+        </select>
+    </div>
+
+    <div id="message" style="color:red;"></div>
+    <table id="incomeTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Income Source</th>
+                <th>Fund Amount (₹)</th>
+                <th>Interest Rate (%)</th>
+                <th>Monthly Income (₹)</th>
+                <th>Yearly Income (₹)</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+            <tr class="total">
+                <td colspan="2">Total Fund: <span id="totalFundAmount">0.00</span></td>
+                <td colspan="2">Avg Interest: <span id="avgInterestRate">0.00%</span></td>
+                <td><span id="totalMonthlyIncome">0.00</span></td>
+                <td><span id="totalYearlyIncome">0.00</span></td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="chart-container">
+        <canvas id="incomeChart"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        function calculateIncome() {
-            let rows = document.querySelectorAll("#incomeTable tbody tr");
-            let totalMonthlyIncome = 0;
-            let totalYearlyIncome = 0;
-            let totalFundAmount = 0;
-            
-            rows.forEach(row => {
-                let inputs = row.querySelectorAll("input");
-                let fundAmount = parseFloat(inputs[1].value) || 0;
-                let interestRate = parseFloat(inputs[2].value) || 0;
-                let monthlyIncome = (fundAmount * interestRate) / 1200;
-                let yearlyIncome = monthlyIncome * 12;
-                
-                row.cells[3].innerText = monthlyIncome.toFixed(2);
-                row.cells[4].innerText = yearlyIncome.toFixed(2);
-                totalMonthlyIncome += monthlyIncome;
-                totalYearlyIncome += yearlyIncome;
-                totalFundAmount += fundAmount;
-            });
-            
-            document.getElementById("totalMonthlyIncome").innerText = totalMonthlyIncome.toFixed(2);
-            document.getElementById("totalYearlyIncome").innerText = totalYearlyIncome.toFixed(2);
-            document.getElementById("totalFundAmount").innerText = totalFundAmount.toFixed(2);
-        }
-
-        function deleteRow(button) {
-            const row = button.closest('tr');
-            row.remove();
-            calculateIncome();
-        }
-
         function addRow() {
-            let tbody = document.querySelector("#incomeTable tbody");
-            let row = document.createElement("tr");
-            row.draggable = true;
+            const tbody = document.querySelector("#incomeTable tbody");
+            const row = document.createElement("tr");
             row.innerHTML = `
-                <td>
-                    <input type="text" list="incomeOptions" placeholder="Type or Select" oninput="calculateIncome()">
+                <td></td>
+                <td><input type="text" list="incomeOptions" placeholder="Type or Select" oninput="calculateIncome()">
                     <datalist id="incomeOptions">
                         <option value="FD">
                         <option value="RD">
@@ -114,110 +175,178 @@
                 <td><button onclick="deleteRow(this)">Delete</button></td>
             `;
             tbody.appendChild(row);
-            addDragAndDrop();
+            row.querySelector("input").focus();
+            calculateIncome();
+        }
+
+        function calculateIncome() {
+            const rows = document.querySelectorAll("#incomeTable tbody tr");
+            let totalMonthly = 0, totalYearly = 0, totalFund = 0, weightedInterest = 0;
+            let chartLabels = [], chartData = [];
+
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll("input");
+                const amount = parseFloat(inputs[1].value) || 0;
+                const rate = parseFloat(inputs[2].value) || 0;
+
+                inputs[1].classList.toggle("error", amount <= 0);
+                inputs[2].classList.toggle("error", rate <= 0);
+
+                const monthly = (amount * rate) / 1200;
+                const yearly = monthly * 12;
+
+                row.cells[4].innerText = monthly.toFixed(2);
+                row.cells[5].innerText = yearly.toFixed(2);
+                row.cells[0].innerText = index + 1;
+
+                totalMonthly += monthly;
+                totalYearly += yearly;
+                totalFund += amount;
+                weightedInterest += amount * rate;
+
+                chartLabels.push(inputs[0].value || `Source ${index + 1}`);
+                chartData.push(monthly);
+            });
+
+            const avgRate = totalFund ? weightedInterest / totalFund : 0;
+            document.getElementById("totalFundAmount").innerText = totalFund.toFixed(2);
+            document.getElementById("totalMonthlyIncome").innerText = totalMonthly.toFixed(2);
+            document.getElementById("totalYearlyIncome").innerText = totalYearly.toFixed(2);
+            document.getElementById("avgInterestRate").innerText = avgRate.toFixed(2) + "%";
+            updateChart(chartLabels, chartData);
+        }
+
+        function deleteRow(button) {
+            button.closest("tr").remove();
+            calculateIncome();
         }
 
         function saveData() {
-            let data = [];
-            let rows = document.querySelectorAll("#incomeTable tbody tr");
+            const rows = document.querySelectorAll("#incomeTable tbody tr");
+            const data = [];
             rows.forEach(row => {
-                let inputs = row.querySelectorAll("input");
+                const inputs = row.querySelectorAll("input");
                 data.push({
                     source: inputs[0].value,
                     amount: inputs[1].value,
                     rate: inputs[2].value,
-                    monthlyIncome: row.cells[3].innerText,
-                    yearlyIncome: row.cells[4].innerText
+                    monthlyIncome: row.cells[4].innerText,
+                    yearlyIncome: row.cells[5].innerText
                 });
             });
-            let blob = new Blob([JSON.stringify(data)], { type: "application/json" });
-            let a = document.createElement("a");
+            const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+            const a = document.createElement("a");
             a.href = URL.createObjectURL(blob);
             a.download = "income_data.json";
+            document.body.appendChild(a);
             a.click();
+            setTimeout(() => {
+                if (document.body.contains(a)) {
+                    URL.revokeObjectURL(a.href);
+                    document.body.removeChild(a);
+                }
+            }, 100);
+            localStorage.setItem("incomeData", JSON.stringify(data));
         }
 
         function loadData(event) {
-            let file = event.target.files[0];
+            const file = event.target.files[0];
             if (!file) return;
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                let data = JSON.parse(e.target.result);
-                let tbody = document.querySelector("#incomeTable tbody");
+            const reader = new FileReader();
+            reader.onload = e => {
+                const data = JSON.parse(e.target.result);
+                const tbody = document.querySelector("#incomeTable tbody");
                 tbody.innerHTML = "";
                 data.forEach(item => {
-                    let row = document.createElement("tr");
+                    const row = document.createElement("tr");
                     row.innerHTML = `
+                        <td></td>
                         <td><input type="text" list="incomeOptions" value="${item.source}" oninput="calculateIncome()"></td>
                         <td><input type="number" value="${item.amount}" oninput="calculateIncome()"></td>
                         <td><input type="number" value="${item.rate}" oninput="calculateIncome()"></td>
-                        <td>${item.monthlyIncome}</td>
-                        <td>${item.yearlyIncome}</td>
+                        <td>0.00</td>
+                        <td>0.00</td>
                         <td><button onclick="deleteRow(this)">Delete</button></td>
                     `;
                     tbody.appendChild(row);
                 });
                 calculateIncome();
-                addDragAndDrop();
             };
             reader.readAsText(file);
         }
 
-        function addDragAndDrop() {
-            const tbody = document.querySelector("#incomeTable tbody");
-            let draggedRow;
+        function changeTheme(theme) {
+            document.body.classList.remove('dark', 'solarized');
+            if (theme !== 'default') {
+                document.body.classList.add(theme);
+            }
+            localStorage.setItem('theme', theme);
+        }
 
-            tbody.querySelectorAll("tr").forEach(row => {
-                row.addEventListener("dragstart", function (e) {
-                    draggedRow = this;
-                    e.dataTransfer.effectAllowed = "move";
-                });
+        let chart;
+        function updateChart(labels, data) {
+            const ctx = document.getElementById("incomeChart").getContext("2d");
+            const type = document.getElementById("chartType").value.toLowerCase();
+            if (chart) chart.destroy();
 
-                row.addEventListener("dragover", function (e) {
-                    e.preventDefault();
-                });
-
-                row.addEventListener("drop", function () {
-                    if (draggedRow !== this) {
-                        const temp = this.innerHTML;
-                        this.innerHTML = draggedRow.innerHTML;
-                        draggedRow.innerHTML = temp;
-                        calculateIncome(); // re-calculate after swapping rows
+            const chartOptions = {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: type !== 'bar'
                     }
-                });
+                }
+            };
+
+            const datasetOptions = type === 'pie'
+                ? {
+                    label: 'Monthly Income',
+                    data: data,
+                    backgroundColor: data.map((_, i) => [
+                        "#4caf50", "#2196f3", "#ff9800", "#e91e63", "#00bcd4", "#9c27b0", "#ffc107"
+                    ][i % 7])
+                }
+                : {
+                    label: "Monthly Income",
+                    data: data,
+                    backgroundColor: "#4caf50"
+                };
+
+            chart = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [datasetOptions]
+                },
+                options: chartOptions
             });
         }
+
+        window.onload = () => {
+            const theme = localStorage.getItem('theme') || document.getElementById('themeSelect').value;
+            document.getElementById('themeSelect').value = theme;
+            changeTheme(theme);
+
+            const saved = localStorage.getItem("incomeData");
+            if (saved) {
+                const data = JSON.parse(saved);
+                const tbody = document.querySelector("#incomeTable tbody");
+                data.forEach(item => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td></td>
+                        <td><input type="text" list="incomeOptions" value="${item.source}" oninput="calculateIncome()"></td>
+                        <td><input type="number" value="${item.amount}" oninput="calculateIncome()"></td>
+                        <td><input type="number" value="${item.rate}" oninput="calculateIncome()"></td>
+                        <td>0.00</td>
+                        <td>0.00</td>
+                        <td><button onclick="deleteRow(this)">Delete</button></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                calculateIncome();
+            }
+        };
     </script>
-</head>
-<body>
-    <h2>Monthly and Yearly Income Calculator</h2>
-    <button onclick="addRow()">Add Income Source</button>
-    <button onclick="saveData()">Save Data</button>
-    <label for="loadFile">Load File</label>
-    <input type="file" id="loadFile" class="hidden-input" onchange="loadData(event)">
-    <table id="incomeTable">
-        <thead>
-            <tr>
-                <th>Income Source</th>
-                <th>Fund Amount. (₹)</th>
-                <th>Interest Rate (%)</th>
-                <th>Monthly Income (₹)</th>
-                <th>Yearly Income (₹)</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-        <tfoot>
-            <tr class="total">
-                <td>Total Fund</td>
-                <td id="totalFundAmount">0.00</td>
-                <td colspan="1">Total Income</td>
-                <td id="totalMonthlyIncome">0.00</td>
-                <td id="totalYearlyIncome">0.00</td>
-                <td></td>
-            </tr>
-        </tfoot>
-    </table>
 </body>
 </html>
