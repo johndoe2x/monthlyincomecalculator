@@ -105,6 +105,14 @@
         .enhanced-select option {
             color: black;
         }
+        /* 🌙 Dark mode toggle button */
+        #themeToggle {
+            font-size: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -114,6 +122,10 @@
         <button onclick="saveData()">Save Data</button>
         <label for="loadFile">Load File</label>
         <input type="file" id="loadFile" class="hidden-input" onchange="loadData(event)">
+        
+        <!-- 🌙 Theme toggle button -->
+        <button id="themeToggle" title="Toggle Dark/Light">🌙</button>
+
         <select id="themeSelect" class="button enhanced-select" onchange="changeTheme(this.value)">
             <option value="default">Theme: Default</option>
             <option value="dark">Theme: Dark</option>
@@ -182,10 +194,11 @@
         function calculateIncome() {
             const rows = document.querySelectorAll("#incomeTable tbody tr");
             let totalMonthly = 0, totalYearly = 0, totalFund = 0, weightedInterest = 0;
-            let chartLabels = [], chartData = [];
+            let chartMap = {};
 
             rows.forEach((row, index) => {
                 const inputs = row.querySelectorAll("input");
+                const sourceName = inputs[0].value.trim() || `Source ${index + 1}`;
                 const amount = parseFloat(inputs[1].value) || 0;
                 const rate = parseFloat(inputs[2].value) || 0;
 
@@ -204,8 +217,10 @@
                 totalFund += amount;
                 weightedInterest += amount * rate;
 
-                chartLabels.push(inputs[0].value || `Source ${index + 1}`);
-                chartData.push(monthly);
+                if (!chartMap[sourceName]) {
+                    chartMap[sourceName] = 0;
+                }
+                chartMap[sourceName] += monthly;
             });
 
             const avgRate = totalFund ? weightedInterest / totalFund : 0;
@@ -213,6 +228,10 @@
             document.getElementById("totalMonthlyIncome").innerText = totalMonthly.toFixed(2);
             document.getElementById("totalYearlyIncome").innerText = totalYearly.toFixed(2);
             document.getElementById("avgInterestRate").innerText = avgRate.toFixed(2) + "%";
+
+            const chartLabels = Object.keys(chartMap);
+            const chartData = Object.values(chartMap);
+
             updateChart(chartLabels, chartData);
         }
 
@@ -281,6 +300,20 @@
                 document.body.classList.add(theme);
             }
             localStorage.setItem('theme', theme);
+            updateThemeIcon(theme);
+        }
+
+        // 🌙 Toggle button handler
+        document.getElementById("themeToggle").addEventListener("click", () => {
+            let current = localStorage.getItem('theme') || 'dark';
+            let newTheme = current === 'dark' ? 'default' : 'dark';
+            document.getElementById('themeSelect').value = newTheme;
+            changeTheme(newTheme);
+        });
+
+        function updateThemeIcon(theme) {
+            const btn = document.getElementById("themeToggle");
+            btn.textContent = theme === "dark" ? "🌙" : "🌞";
         }
 
         let chart;
@@ -323,7 +356,8 @@
         }
 
         window.onload = () => {
-            const theme = localStorage.getItem('theme') || document.getElementById('themeSelect').value;
+            // 🌙 Default to dark mode
+            let theme = localStorage.getItem('theme') || 'dark';
             document.getElementById('themeSelect').value = theme;
             changeTheme(theme);
 
