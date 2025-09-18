@@ -30,7 +30,7 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
         table {
-            width: 90%;
+            width: 95%;
             margin: 20px auto;
             border-collapse: collapse;
             background-color: var(--card);
@@ -105,7 +105,6 @@
         .enhanced-select option {
             color: black;
         }
-        /* 🌙 Dark mode toggle button */
         #themeToggle {
             font-size: 20px;
             background: none;
@@ -123,7 +122,6 @@
         <label for="loadFile">Load File</label>
         <input type="file" id="loadFile" class="hidden-input" onchange="loadData(event)">
         
-        <!-- 🌙 Theme toggle button -->
         <button id="themeToggle" title="Toggle Dark/Light">🌙</button>
 
         <select id="themeSelect" class="button enhanced-select" onchange="changeTheme(this.value)">
@@ -142,6 +140,7 @@
         <thead>
             <tr>
                 <th>#</th>
+                <th>Include</th>
                 <th>Income Source</th>
                 <th>Fund Amount (₹)</th>
                 <th>Interest Rate (%)</th>
@@ -153,7 +152,7 @@
         <tbody></tbody>
         <tfoot>
             <tr class="total">
-                <td colspan="2">Total Fund: <span id="totalFundAmount">0.00</span></td>
+                <td colspan="3">Total Fund: <span id="totalFundAmount">0.00</span></td>
                 <td colspan="2">Avg Interest: <span id="avgInterestRate">0.00%</span></td>
                 <td><span id="totalMonthlyIncome">0.00</span></td>
                 <td><span id="totalYearlyIncome">0.00</span></td>
@@ -168,26 +167,26 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        function addRow() {
+        function addRow(include = true, source = "", amount = "", rate = "") {
             const tbody = document.querySelector("#incomeTable tbody");
             const row = document.createElement("tr");
             row.innerHTML = `
                 <td></td>
-                <td><input type="text" list="incomeOptions" placeholder="Type or Select" oninput="calculateIncome()">
+                <td><input type="checkbox" ${include ? "checked" : ""} onchange="calculateIncome()"></td>
+                <td><input type="text" list="incomeOptions" value="${source}" placeholder="Type or Select" oninput="calculateIncome()">
                     <datalist id="incomeOptions">
                         <option value="FD">
                         <option value="RD">
                         <option value="Liquid Fund">
                     </datalist>
                 </td>
-                <td><input type="number" placeholder="Amount" oninput="calculateIncome()"></td>
-                <td><input type="number" placeholder="Rate" oninput="calculateIncome()"></td>
+                <td><input type="number" value="${amount}" placeholder="Amount" oninput="calculateIncome()"></td>
+                <td><input type="number" value="${rate}" placeholder="Rate" oninput="calculateIncome()"></td>
                 <td>0.00</td>
                 <td>0.00</td>
                 <td><button onclick="deleteRow(this)">Delete</button></td>
             `;
             tbody.appendChild(row);
-            row.querySelector("input").focus();
             calculateIncome();
         }
 
@@ -197,7 +196,8 @@
             let chartMap = {};
 
             rows.forEach((row, index) => {
-                const inputs = row.querySelectorAll("input");
+                const include = row.querySelector("input[type=checkbox]").checked;
+                const inputs = row.querySelectorAll("input[type=text], input[type=number]");
                 const sourceName = inputs[0].value.trim() || `Source ${index + 1}`;
                 const amount = parseFloat(inputs[1].value) || 0;
                 const rate = parseFloat(inputs[2].value) || 0;
@@ -208,19 +208,21 @@
                 const monthly = (amount * rate) / 1200;
                 const yearly = monthly * 12;
 
-                row.cells[4].innerText = monthly.toFixed(2);
-                row.cells[5].innerText = yearly.toFixed(2);
+                row.cells[5].innerText = monthly.toFixed(2);
+                row.cells[6].innerText = yearly.toFixed(2);
                 row.cells[0].innerText = index + 1;
 
-                totalMonthly += monthly;
-                totalYearly += yearly;
-                totalFund += amount;
-                weightedInterest += amount * rate;
+                if (include) {
+                    totalMonthly += monthly;
+                    totalYearly += yearly;
+                    totalFund += amount;
+                    weightedInterest += amount * rate;
 
-                if (!chartMap[sourceName]) {
-                    chartMap[sourceName] = 0;
+                    if (!chartMap[sourceName]) {
+                        chartMap[sourceName] = 0;
+                    }
+                    chartMap[sourceName] += monthly;
                 }
-                chartMap[sourceName] += monthly;
             });
 
             const avgRate = totalFund ? weightedInterest / totalFund : 0;
@@ -229,10 +231,7 @@
             document.getElementById("totalYearlyIncome").innerText = totalYearly.toFixed(2);
             document.getElementById("avgInterestRate").innerText = avgRate.toFixed(2) + "%";
 
-            const chartLabels = Object.keys(chartMap);
-            const chartData = Object.values(chartMap);
-
-            updateChart(chartLabels, chartData);
+            updateChart(Object.keys(chartMap), Object.values(chartMap));
         }
 
         function deleteRow(button) {
@@ -244,13 +243,13 @@
             const rows = document.querySelectorAll("#incomeTable tbody tr");
             const data = [];
             rows.forEach(row => {
-                const inputs = row.querySelectorAll("input");
+                const include = row.querySelector("input[type=checkbox]").checked;
+                const inputs = row.querySelectorAll("input[type=text], input[type=number]");
                 data.push({
+                    include: include,
                     source: inputs[0].value,
                     amount: inputs[1].value,
-                    rate: inputs[2].value,
-                    monthlyIncome: row.cells[4].innerText,
-                    yearlyIncome: row.cells[5].innerText
+                    rate: inputs[2].value
                 });
             });
             const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
@@ -277,17 +276,7 @@
                 const tbody = document.querySelector("#incomeTable tbody");
                 tbody.innerHTML = "";
                 data.forEach(item => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td></td>
-                        <td><input type="text" list="incomeOptions" value="${item.source}" oninput="calculateIncome()"></td>
-                        <td><input type="number" value="${item.amount}" oninput="calculateIncome()"></td>
-                        <td><input type="number" value="${item.rate}" oninput="calculateIncome()"></td>
-                        <td>0.00</td>
-                        <td>0.00</td>
-                        <td><button onclick="deleteRow(this)">Delete</button></td>
-                    `;
-                    tbody.appendChild(row);
+                    addRow(item.include, item.source, item.amount, item.rate);
                 });
                 calculateIncome();
             };
@@ -303,7 +292,6 @@
             updateThemeIcon(theme);
         }
 
-        // 🌙 Toggle button handler
         document.getElementById("themeToggle").addEventListener("click", () => {
             let current = localStorage.getItem('theme') || 'dark';
             let newTheme = current === 'dark' ? 'default' : 'dark';
@@ -325,9 +313,7 @@
             const chartOptions = {
                 responsive: true,
                 plugins: {
-                    legend: {
-                        display: type !== 'bar'
-                    }
+                    legend: { display: type !== 'bar' }
                 }
             };
 
@@ -347,16 +333,12 @@
 
             chart = new Chart(ctx, {
                 type: type,
-                data: {
-                    labels: labels,
-                    datasets: [datasetOptions]
-                },
+                data: { labels: labels, datasets: [datasetOptions] },
                 options: chartOptions
             });
         }
 
         window.onload = () => {
-            // 🌙 Default to dark mode
             let theme = localStorage.getItem('theme') || 'dark';
             document.getElementById('themeSelect').value = theme;
             changeTheme(theme);
@@ -365,18 +347,9 @@
             if (saved) {
                 const data = JSON.parse(saved);
                 const tbody = document.querySelector("#incomeTable tbody");
+                tbody.innerHTML = "";
                 data.forEach(item => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td></td>
-                        <td><input type="text" list="incomeOptions" value="${item.source}" oninput="calculateIncome()"></td>
-                        <td><input type="number" value="${item.amount}" oninput="calculateIncome()"></td>
-                        <td><input type="number" value="${item.rate}" oninput="calculateIncome()"></td>
-                        <td>0.00</td>
-                        <td>0.00</td>
-                        <td><button onclick="deleteRow(this)">Delete</button></td>
-                    `;
-                    tbody.appendChild(row);
+                    addRow(item.include, item.source, item.amount, item.rate);
                 });
                 calculateIncome();
             }
